@@ -1,5 +1,6 @@
 #include "../include/cserver.h"
 #include <stdio.h>
+#include <string.h>
 
 /*
  * @brief creates a server
@@ -38,7 +39,7 @@ int cserver_socket_bind(struct addrinfo * p_server)
                      p_server->ai_socktype,
                      p_server->ai_protocol);
     if (0 < sfd){
-        if (0 < bind(sfd, p_server->ai_addr, p_server->ai_addrlen)){
+        if (0 == bind(sfd, p_server->ai_addr, p_server->ai_addrlen)){
             return sfd;
         } else {
             // could not bind on a socket
@@ -58,4 +59,18 @@ int cserver_socket_bind(struct addrinfo * p_server)
  * @param p_service allocated space to put the service of the server
  * @return an allocated string that is the servers address
  */
-int cserver_info(struct addrinfo * p_server, char * p_host, char * p_service);
+int cserver_info(struct addrinfo * p_server, char * p_host, char * p_service)
+{
+    char host[NI_MAXHOST] = {'\0'}, service[NI_MAXSERV] = {'\0'};
+    int err = getnameinfo(p_server->ai_addr, p_server->ai_addrlen,
+                          host, NI_MAXHOST, service, NI_MAXSERV,
+                          NI_NUMERICHOST | NI_NUMERICSERV);
+    if (!err){
+        strncat(p_host, host, strlen(host));
+        strncat(p_service, service, strlen(service));
+        return 0;
+    } else {
+        fprintf(stderr, "getnameinfo: %s\n", gai_strerror(err));
+        return err;
+    }
+}
