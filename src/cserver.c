@@ -74,3 +74,22 @@ int cserver_info(struct addrinfo * p_server, char * p_host, char * p_service)
         return err;
     }
 }
+
+/*
+ * @brief listens for a connection
+ * @param sfd the socket to list on
+ * @return the socket that a connection was accepted on else -1 on error
+ */
+int cserver_wait_connection(int sfd)
+{
+    struct sockaddr_storage client = {0};
+    socklen_t client_size = sizeof(client);
+    int cfd = accept(sfd, (struct sockaddr *)&client, &client_size);     
+    if (0 < cfd){
+       return cfd; 
+    } else {
+        // could not accept a connection
+        perror("accept");
+        return -1;
+    }
+}
