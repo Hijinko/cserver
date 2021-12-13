@@ -1,6 +1,7 @@
 #include "../include/cserver.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
 
 /*
  * @brief creates a server
@@ -38,6 +39,9 @@ int cserver_socket_bind(struct addrinfo * p_server)
     int sfd = socket(p_server->ai_family,
                      p_server->ai_socktype,
                      p_server->ai_protocol);
+    // enable reuseaddr flag on the socket
+    int enable = 1;
+    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
     if (0 < sfd){
         if (0 == bind(sfd, p_server->ai_addr, p_server->ai_addrlen)){
             return sfd;
