@@ -1,6 +1,7 @@
 #include "../include/cserver.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
 
 /*
  * @brief creates a server
@@ -38,6 +39,9 @@ int cserver_socket_bind(struct addrinfo * p_server)
     int sfd = socket(p_server->ai_family,
                      p_server->ai_socktype,
                      p_server->ai_protocol);
+    // enable reuseaddr flag on the socket
+    int enable = 1;
+    setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
     if (0 < sfd){
         if (0 == bind(sfd, p_server->ai_addr, p_server->ai_addrlen)){
             return sfd;
@@ -72,5 +76,24 @@ int cserver_info(struct addrinfo * p_server, char * p_host, char * p_service)
     } else {
         fprintf(stderr, "getnameinfo: %s\n", gai_strerror(err));
         return err;
+    }
+}
+
+/*
+ * @brief listens for a connection
+ * @param sfd the socket to list on
+ * @return the socket that a connection was accepted on else -1 on error
+ */
+int cserver_wait_connection(int sfd)
+{
+    struct sockaddr_storage client = {0};
+    socklen_t client_size = sizeof(client);
+    int cfd = accept(sfd, (struct sockaddr *)&client, &client_size);     
+    if (0 < cfd){
+       return cfd; 
+    } else {
+        // could not accept a connection
+        perror("accept");
+        return -1;
     }
 }
